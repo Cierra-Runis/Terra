@@ -66,4 +66,12 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+    implementation(files("libs/QWeather_Public_Android_V4.17.jar"))
+    implementation(libs.okhttp)
+    implementation(libs.gson)
+
+    implementation(libs.androidx.material3.window.size)
+
+    implementation(libs.androidx.datastore.preferences)
 }

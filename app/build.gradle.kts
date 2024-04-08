@@ -20,13 +20,25 @@ android {
         }
     }
 
+    signingConfigs {
+        create("release") {
+            keyAlias = "key_alias"
+            keyPassword = "key_alias_password"
+            storeFile = file("D:\\Desktop\\Default\\key_alias.jks")
+            storePassword = "key_alias_password"
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
+
+
             )
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
@@ -67,6 +79,8 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
+    implementation(libs.androidx.navigation.compose)
+
     implementation(files("libs/QWeather_Public_Android_V4.17.jar"))
     implementation(libs.okhttp)
     implementation(libs.gson)
@@ -74,4 +88,7 @@ dependencies {
     implementation(libs.androidx.material3.window.size)
 
     implementation(libs.androidx.datastore.preferences)
+
+    implementation(libs.coil.compose)
+    implementation(libs.coil.svg)
 }

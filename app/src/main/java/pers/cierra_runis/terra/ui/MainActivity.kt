@@ -1,34 +1,45 @@
-package pers.cierra_runis.terra
+package pers.cierra_runis.terra.ui
 
 import android.content.*
 import android.content.pm.*
 import android.net.*
 import android.os.*
 import android.provider.*
+import android.util.*
 import androidx.activity.*
 import androidx.activity.compose.*
 import androidx.activity.result.contract.*
-import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.*
-import androidx.compose.material.icons.outlined.*
-import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.*
 import androidx.compose.ui.platform.*
-import androidx.compose.ui.text.font.*
-import androidx.compose.ui.text.style.*
-import androidx.compose.ui.unit.*
 import androidx.core.content.*
 import androidx.lifecycle.*
+import androidx.navigation.*
+import androidx.navigation.compose.*
+import com.qweather.sdk.view.*
 import kotlinx.coroutines.*
+import pers.cierra_runis.terra.ui.pages.*
 import pers.cierra_runis.terra.ui.theme.*
 
+
+val LocalNavController: ProvidableCompositionLocal<NavController> =
+    compositionLocalOf { error("No NavController found") }
+
 class MainActivity : ComponentActivity() {
-    @OptIn(ExperimentalMaterial3Api::class)
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        HeConfig.init("HE2404062039341098", "e2365942fb174ab2a0f76a28159940d7")
+        HeConfig.switchToDevService()
+
+        if (display != null) {
+            val mode = display!!.supportedModes.maxBy { it.refreshRate }
+            Log.d("Terra", "${mode.refreshRate} Hz")
+            window.attributes.preferredDisplayModeId = mode.modeId
+        }
 
         setContent {
             var locationPermissionsGranted by remember {
@@ -97,104 +108,18 @@ class MainActivity : ComponentActivity() {
             }
             )
 
+            val navController = rememberNavController()
             val scope = rememberCoroutineScope()
             val snackbarHostState = remember { SnackbarHostState() }
-            var expanded by remember { mutableStateOf(true) }
 
             TerraTheme {
-                Scaffold(
-                    topBar = {
-                        CenterAlignedTopAppBar(
-                            title = {
-                                Text(text = "标题")
-                            },
-                            navigationIcon = {
-                                IconButton(onClick = { /*TODO*/ }) {
-                                    Icon(Icons.Rounded.Add, contentDescription = "Add")
-                                }
-                            },
-                            actions = {
-
-                                IconButton(onClick = { expanded = !expanded }) {
-                                    Icon(Icons.Rounded.MoreVert, "More")
-                                }
-
-                            }
-                        )
-                    },
-                    bottomBar = {
-                        BottomAppBar(actions = {})
-                    },
-                    snackbarHost = {
-                        SnackbarHost(hostState = snackbarHostState)
-                    },
-                ) { contentPadding ->
-                    Column(
-                        modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
+                CompositionLocalProvider(LocalNavController provides navController) {
+                    NavHost(
+                        navController,
+                        startDestination = "Home",
                     ) {
-                        Text(
-                            modifier = Modifier
-                                .padding(contentPadding)
-                                .fillMaxWidth(),
-                            text = "Location Permissions",
-                            textAlign = TextAlign.Center
-                        )
-                        Spacer(modifier = Modifier.padding(20.dp))
-                        Text(
-                            modifier = Modifier
-                                .padding(contentPadding)
-                                .fillMaxWidth(),
-                            text = "Current Permission Status: $currentPermissionsStatus",
-                            textAlign = TextAlign.Center,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                    Box(
-                        Modifier
-                            .fillMaxSize()
-                            .wrapContentSize(Alignment.TopEnd)
-                    ) {
-                        DropdownMenu(
-                            expanded = expanded,
-                            onDismissRequest = { expanded = false }
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text("Edit") },
-                                onClick = { /* Handle edit! */ },
-                                leadingIcon = {
-                                    Icon(
-                                        Icons.Outlined.Edit,
-                                        contentDescription = null
-                                    )
-                                })
-                            DropdownMenuItem(
-                                text = { Text("Settings") },
-                                onClick = { /* Handle settings! */ },
-                                leadingIcon = {
-                                    Icon(
-                                        Icons.Outlined.Settings,
-                                        contentDescription = null
-                                    )
-                                })
-                            HorizontalDivider()
-                            DropdownMenuItem(
-                                text = { Text("Send Feedback") },
-                                onClick = { /* Handle send feedback! */ },
-                                leadingIcon = {
-                                    Icon(
-                                        Icons.Outlined.Email,
-                                        contentDescription = null
-                                    )
-                                },
-                                trailingIcon = {
-                                    Text(
-                                        "F11",
-                                        textAlign = TextAlign.Center
-                                    )
-                                })
-                        }
+                        composable("Home") { HomePage(snackbarHostState) }
+                        composable("Settings") { SettingsPage() }
                     }
 
 
@@ -202,8 +127,8 @@ class MainActivity : ComponentActivity() {
                         LaunchedEffect(Unit) {
                             scope.launch {
                                 val userAction = snackbarHostState.showSnackbar(
-                                    message = "Please authorize location permissions",
-                                    actionLabel = "Approve",
+                                    message = "请同意获取位置",
+                                    actionLabel = "好的",
                                     duration = SnackbarDuration.Indefinite,
                                     withDismissAction = true
                                 )
@@ -224,10 +149,10 @@ class MainActivity : ComponentActivity() {
                         openApplicationSettings()
                     }
                 }
-
             }
         }
     }
+
 
     private fun areLocationPermissionsAlreadyGranted(): Boolean {
         return ContextCompat.checkSelfPermission(

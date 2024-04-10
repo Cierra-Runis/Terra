@@ -9,7 +9,7 @@ android {
 
     defaultConfig {
         applicationId = "pers.cierra_runis.terra"
-        minSdk = 31
+        minSdk = 21
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -31,12 +31,10 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
-
-
             )
             signingConfig = signingConfigs.getByName("release")
         }
